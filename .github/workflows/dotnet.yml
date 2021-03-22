@@ -35,6 +35,6 @@ jobs:
     - name: Test
       run: dotnet test src
 
-    - name: Publish Fibula.Plugins.ItemLoaders.CipObjectsFile Package
-      run: dotnet nuget push "src/Fibula.Plugins.ItemLoaders.CipObjectsFile/bin/Release/*.nupkg" --skip-duplicate --api-key ${{ secrets.GITHUB_TOKEN }}
+    - name: Publish Fibula.Plugins.MonsterLoaders.CipMonFiles Package
+      run: dotnet nuget push "src/Fibula.Plugins.MonsterLoaders.CipMonFiles/bin/Release/*.nupkg" --skip-duplicate --api-key ${{ secrets.GITHUB_TOKEN }}
       
