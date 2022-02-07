@@ -124,188 +124,78 @@ namespace Fibula.Plugins.MonsterLoaders.CipMonFiles
                 return null;
             }
 
-            var monsterType = new MonsterTypeEntity();
+            var parsedMonster = CipFileParser.ParseMonsterFile(monsterFileInfo);
 
-            foreach ((string name, string value) in ReadInDataTuples(File.ReadLines(monsterFileInfo.FullName), monsterFileInfo.FullName))
+            var monsterType = new MonsterTypeEntity()
             {
-                switch (name)
+                RaceId = parsedMonster.RaceId.ToString(),
+                Name = parsedMonster.Name,
+                Article = parsedMonster.Article,
+                OriginalOutfit = new Outfit()
                 {
-                    case "racenumber":
-                        monsterType.RaceId = value;
-                        break;
-                    case "name":
-                        monsterType.Name = value;
-                        break;
-                    case "article":
-                        monsterType.Article = value;
-                        break;
-                    case "outfit":
-                        var (lookTypeId, headColor, bodyColor, legsColor, feetColor) = CipFileParser.ParseMonsterOutfit(value);
+                    Id = parsedMonster.Outfit.Id,
+                    Head = parsedMonster.Outfit.Head,
+                    Body = parsedMonster.Outfit.Body,
+                    Legs = parsedMonster.Outfit.Legs,
+                    Feet = parsedMonster.Outfit.Feet,
+                },
+                Corpse = (ushort)parsedMonster.Corpse,
+                BloodType = parsedMonster.BloodType,
+                BaseExperienceYield = parsedMonster.Experience,
+                SummonCost = parsedMonster.SummonCost,
+                HitpointFleeThreshold = parsedMonster.FleeThreshold,
+                BaseAttack = parsedMonster.Attack,
+                BaseDefense = parsedMonster.Defense,
+                BaseArmorRating = parsedMonster.Armor,
+                LoseTargetDistance = parsedMonster.LoseTarget,
+                Strategy = parsedMonster.Strategy,
+            };
 
-                        monsterType.OriginalOutfit = new Outfit()
-                        {
-                            Id = lookTypeId,
-                            Head = headColor,
-                            Body = bodyColor,
-                            Legs = legsColor,
-                            Feet = feetColor,
-                        };
-                        break;
-                    case "corpse":
-                        monsterType.Corpse = Convert.ToUInt16(value);
-                        break;
-                    case "blood":
-                        if (Enum.TryParse(value, out BloodType bloodType))
-                        {
-                            monsterType.BloodType = bloodType;
-                        }
-
-                        break;
-                    case "experience":
-                        monsterType.BaseExperienceYield = Convert.ToUInt32(value);
-                        break;
-                    case "summoncost":
-                        monsterType.SummonCost = Convert.ToUInt16(value);
-                        break;
-                    case "fleethreshold":
-                        monsterType.HitpointFleeThreshold = Convert.ToUInt16(value);
-                        break;
-                    case "attack":
-                        monsterType.BaseAttack = Convert.ToUInt16(value);
-                        break;
-                    case "defend":
-                        monsterType.BaseDefense = Convert.ToUInt16(value);
-                        break;
-                    case "armor":
-                        monsterType.BaseArmorRating = Convert.ToUInt16(value);
-                        break;
-                    case "poison":
-                        // monsterType.SetConditionInfect(ConditionType.Posioned, Convert.ToUInt16(value));
-                        break;
-                    case "losetarget":
-                        monsterType.LoseTargetDistance = Convert.ToByte(value);
-                        break;
-                    case "strategy":
-                        monsterType.Strategy = CipFileParser.ParseMonsterStrategy(value);
-                        break;
-                    case "flags":
-                        var parsedElements = CipFileParser.Parse(value);
-
-                        foreach (var element in parsedElements)
-                        {
-                            if (!element.IsFlag || element.Attributes == null || !element.Attributes.Any())
-                            {
-                                continue;
-                            }
-
-                            if (Enum.TryParse(element.Attributes.First().Name, out CipCreatureFlag flagMatch))
-                            {
-                                if (flagMatch.ToCreatureFlag() is CreatureFlag creatureFlag)
-                                {
-                                    monsterType.SetCreatureFlag(creatureFlag);
-                                }
-                            }
-                        }
-
-                        break;
-                    case "skills":
-                        var skillParsed = CipFileParser.ParseMonsterSkills(value);
-
-                        foreach (var (skillType, defaultLevel, currentLevel, maximumLevel, targetCount, countIncreaseFactor, increaserPerLevel) in skillParsed)
-                        {
-                            if (!Enum.TryParse(skillType, ignoreCase: true, out CipMonsterSkillType mSkill))
-                            {
-                                continue;
-                            }
-
-                            switch (mSkill)
-                            {
-                                case CipMonsterSkillType.Hitpoints:
-                                    monsterType.MaxHitpoints = currentLevel < 0 ? ushort.MaxValue : (ushort)defaultLevel;
-                                    break;
-                                case CipMonsterSkillType.GoStrength:
-                                    monsterType.BaseSpeed = currentLevel < 0 ? ushort.MinValue : (ushort)defaultLevel;
-                                    break;
-                                case CipMonsterSkillType.CarryStrength:
-                                    monsterType.Capacity = currentLevel < 0 ? ushort.MinValue : (ushort)defaultLevel;
-                                    break;
-                                case CipMonsterSkillType.FistFighting:
-                                    if (currentLevel > 0)
-                                    {
-                                        monsterType.SetSkill(SkillType.NoWeapon, currentLevel, defaultLevel, maximumLevel, targetCount, countIncreaseFactor, increaserPerLevel);
-                                    }
-
-                                    break;
-                            }
-                        }
-
-                        break;
-                    case "spells":
-                        // monsterType.SetSpells(CipFileParser.ParseMonsterSpells(value));
-                        break;
-                    case "inventory":
-                        monsterType.SetInventory(CipFileParser.ParseMonsterInventory(value));
-                        break;
-                    case "talk":
-                        monsterType.SetPhrases(CipFileParser.ParsePhrases(value));
-                        break;
+            foreach (var flag in parsedMonster.Flags)
+            {
+                if (flag.ToCreatureFlag() is CreatureFlag creatureFlag)
+                {
+                    monsterType.SetCreatureFlag(creatureFlag);
                 }
             }
 
-            return monsterType;
-        }
-
-        /// <summary>
-        /// Reads data out of multiple lines in the input files.
-        /// </summary>
-        /// <param name="fileLines">The file's lines.</param>
-        /// <param name="monsterFileName">The current monster file name, for logging purposes.</param>
-        /// <returns>A collection of mappings of properties names to values.</returns>
-        private static IEnumerable<(string propName, string propValue)> ReadInDataTuples(IEnumerable<string> fileLines, string monsterFileName)
-        {
-            fileLines.ThrowIfNull(nameof(fileLines));
-
-            var propName = string.Empty;
-            var propData = string.Empty;
-
-            foreach (var readLine in fileLines)
+            foreach (var (skillType, defaultLevel, currentLevel, maximumLevel, targetCount, countIncreaseFactor, increaserPerLevel) in parsedMonster.Skills)
             {
-                var inLine = readLine.TrimStart();
-
-                // ignore comments and empty lines.
-                if (string.IsNullOrWhiteSpace(inLine) || inLine.StartsWith(CommentSymbol))
+                if (!Enum.TryParse(skillType, ignoreCase: true, out CipMonsterSkillType mSkill))
                 {
                     continue;
                 }
 
-                var data = inLine.Split(new[] { PropertyValueSeparator }, 2);
-
-                if (data.Length > 2)
+                switch (mSkill)
                 {
-                    throw new Exception($"Malformed line [{inLine}] in objects file: [{monsterFileName}]");
-                }
+                    case CipMonsterSkillType.Hitpoints:
+                        monsterType.MaxHitpoints = currentLevel < 0 ? ushort.MaxValue : (ushort)defaultLevel;
+                        break;
+                    case CipMonsterSkillType.GoStrength:
+                        monsterType.BaseSpeed = currentLevel < 0 ? ushort.MinValue : (ushort)defaultLevel;
+                        break;
+                    case CipMonsterSkillType.CarryStrength:
+                        monsterType.Capacity = currentLevel < 0 ? ushort.MinValue : (ushort)defaultLevel;
+                        break;
+                    case CipMonsterSkillType.FistFighting:
+                        if (currentLevel > 0)
+                        {
+                            monsterType.SetSkill(SkillType.NoWeapon, Convert.ToInt32(currentLevel), Convert.ToInt32(defaultLevel), Convert.ToInt32(maximumLevel), targetCount, countIncreaseFactor, increaserPerLevel);
+                        }
 
-                if (data.Length == 1)
-                {
-                    // line is a continuation of the last prop.
-                    propData += data[0].Trim();
-                }
-                else
-                {
-                    if (propName.Length > 0 && propData.Length > 0)
-                    {
-                        yield return (propName, propData);
-                    }
-
-                    propName = data[0].ToLower().Trim();
-                    propData = data[1].Trim();
+                        break;
                 }
             }
 
-            if (propName.Length > 0 && propData.Length > 0)
+            foreach (var spellRule in parsedMonster.Spells)
             {
-                yield return (propName, propData);
+                // Not implemented yet.
             }
+
+            monsterType.SetInventory(parsedMonster.Inventory);
+            monsterType.SetPhrases(parsedMonster.Phrases);
+
+            return monsterType;
         }
     }
 }

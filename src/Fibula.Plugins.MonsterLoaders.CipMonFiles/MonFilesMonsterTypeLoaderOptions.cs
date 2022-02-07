@@ -21,7 +21,7 @@ namespace Fibula.Plugins.MonsterLoaders.CipMonFiles
         /// <summary>
         /// Gets or sets the directory for the monster (*.mon) files.
         /// </summary>
-        [Required(ErrorMessage = "A directory for the monster (*.mon) files files must be specified.")]
+        [Required(ErrorMessage = "A directory for the monster (*.mon) files must be specified.")]
         public string MonsterFilesDirectory { get; set; }
     }
 }
