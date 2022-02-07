@@ -20,7 +20,7 @@
     <PackageProjectUrl>https://fibula-mmo.github.io/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Fibula-MMO/fibula-plugins-cip-monster-files</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <NeutralLanguage>en</NeutralLanguage>
     <Description>A plugin that enables loading from the Cip monster files (.mon), compatible with the Fibula project.</Description>
   </PropertyGroup>
@@ -42,7 +42,7 @@
     <PackageReference Include="Fibula.Parsing.CipFiles" Version="1.0.10" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="5.0.0" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.406">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
